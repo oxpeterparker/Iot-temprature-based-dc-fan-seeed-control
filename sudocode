@@ -1,0 +1,41 @@
+#include <DHT.h>            // Include the DHT library
+#include <ESP8266WiFi.h>    // Include the ESP8266WiFi library
+#include <BlynkSimpleEsp8266.h> // Include the Blynk library
+
+#define DHTPIN D4          // Define the pin for the DHT sensor
+#define DHTTYPE DHT11      // Define the type of DHT sensor
+
+#define FAN_PIN D5         // Define the pin for controlling the fan speed
+
+#define BLYNK_AUTH "YourAuthToken"  // Your Blynk auth token
+
+char ssid[] = "YourWiFiSSID";       // Your WiFi SSID
+char pass[] = "YourWiFiPassword";   // Your WiFi password
+
+DHT dht(DHTPIN, DHTTYPE);           // Initialize the DHT sensor
+
+void setup() {
+  Serial.begin(9600);               // Initialize serial communication
+  Blynk.begin(BLYNK_AUTH, ssid, pass); // Initialize Blynk with WiFi credentials
+  dht.begin();                      // Initialize the DHT sensor
+  pinMode(FAN_PIN, OUTPUT);         // Set the fan pin as output
+}
+
+void loop() {
+  Blynk.run();                      // Run Blynk
+
+  float temperature = dht.readTemperature(); // Read temperature from DHT sensor
+  if (isnan(temperature)) {
+    Serial.println("Failed to read from DHT sensor!"); // Check if reading failed
+    return;
+  }
+
+  Serial.print("Temperature: ");
+  Serial.println(temperature);
+
+  // Adjust fan speed based on temperature
+  int fanSpeed = map(temperature, 20, 30, 0, 1023); // Map temperature range to fan speed range
+  analogWrite(FAN_PIN, fanSpeed); // Set fan speed using PWM
+
+  delay(5000); // Wait for 5 seconds before taking the next reading
+}
